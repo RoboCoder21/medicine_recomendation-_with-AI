@@ -72,14 +72,22 @@
 
 <div class="container my-4 mt-4" style="background: black; color: white; border-radius: 15px; padding: 40px;">
     <form action="/predict" method="post">
-        <div class="form-group">
-            <label for="symptoms">Select Symptoms:</label>
-            <input type="text" class="form-control", id="symptoms" name="symptoms" placeholder="type systems such as itching, sleeping, aching etc">
+        <!-- Add language selector -->
+        <div class="form-group mb-3">
+            <label for="language">Select Language / ቋንቋ ይምረጡ:</label>
+            <select class="form-control" id="language" name="language">
+                <option value="en">English</option>
+                <option value="am">አማርኛ</option>
+            </select>
+        </div>
 
+        <div class="form-group">
+            <label for="symptoms" id="symptomsLabel">Select Symptoms:</label>
+            <input type="text" class="form-control" id="symptoms" name="symptoms" placeholder="type symptoms such as itching, sleeping, aching etc">
         </div>
         <br>
         <button type="button" id="startSpeechRecognition" class="btn btn-primary" style="margin-left:3px;border:1px solid white; border-radius:20px;">
-            Start Speech Recognition
+            <span id="speechButtonText">Start Speech Recognition</span>
         </button>
         <br>
 
@@ -236,17 +244,38 @@
         <script>
     const startSpeechRecognitionButton = document.getElementById('startSpeechRecognition');
     const transcriptionDiv = document.getElementById('transcription');
+    const languageSelect = document.getElementById('language');
+    const symptomsLabel = document.getElementById('symptomsLabel');
+    const speechButtonText = document.getElementById('speechButtonText');
+    const symptomsInput = document.getElementById('symptoms');
+
+    // Update UI text based on selected language
+    function updateUILanguage(lang) {
+        if (lang === 'am') {
+            symptomsLabel.textContent = 'ምልክቶችን ይምረጡ:';
+            speechButtonText.textContent = 'የድምፅ መለያን ጀምር';
+            symptomsInput.placeholder = 'እባክዎ ምልክቶችን ያስገቡ: ማሳከክ፣ መተኛት፣ ህመም ወዘተ';
+        } else {
+            symptomsLabel.textContent = 'Select Symptoms:';
+            speechButtonText.textContent = 'Start Speech Recognition';
+            symptomsInput.placeholder = 'type symptoms such as itching, sleeping, aching etc';
+        }
+    }
+
+    languageSelect.addEventListener('change', (e) => {
+        updateUILanguage(e.target.value);
+    });
 
     startSpeechRecognitionButton.addEventListener('click', startSpeechRecognition);
 
     function startSpeechRecognition() {
-        const recognition = new webkitSpeechRecognition(); // Use webkitSpeechRecognition for compatibility
-
-        recognition.lang = 'en-US'; // Set the language for recognition
-
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = languageSelect.value === 'am' ? 'am-ET' : 'en-US';
+        
         recognition.onresult = function (event) {
             const result = event.results[0][0].transcript;
             transcriptionDiv.textContent = result;
+            symptomsInput.value = result; // Automatically fill the symptoms input
         };
 
         recognition.onend = function () {

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Care Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fa;
+            color: #333;
+        }
+
+        header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        nav {
+            margin: 15px 0;
+        }
+
+        nav a {
+            margin: 0 15px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #d4edda;
+        }
+
+        .hero {
+            background-image: url('https://source.unsplash.com/1600x400/?health,wellness');
+            background-size: cover;
+            color: white;
+            padding: 50px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+
+        .hero h1 {
+            font-size: 2.5em;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #28a745;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .symptom-selector {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 60%;
+            margin-right: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #28a745;
+            outline: none;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .results {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .results.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .results h3 {
+            color: #28a745;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #28a745;
+            color: white;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+            }
+
+            nav a {
+                display: block;
+                margin: 10px 0;
+            }
+
+            input[type="text"] {
+                width: 80%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Health Care Center</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">About Us</a>
+            <a href="#">Contact</a>
+            <a href="#">FAQs</a>
+        </nav>
+        <div>
+            <label for="language-select">Select Language:</label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="am">አማርኛ</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1>Your Health, Our Commitment</h1>
+        <p>Providing personalized health care solutions tailored to your needs.</p>
+    </div>
+
+    <div class="container">
+        <h2>Identify Your Symptoms</h2>
+        <div class="symptom-selector">
+            <input type="text" id="symptom-input" placeholder="Enter your symptoms here..." />
+            <button onclick="predictSymptoms()">Predict Symptoms</button>
+        </div>
+
+        <div class="results" id="results">
+            <h3>Our AI System Results</h3>
+            <p><strong>Predicted Disease:</strong> <span id="predicted_disease"></span></p>
+            <p><strong>Description:</strong> <span id="dis_des"></span></p>
+            <p><strong>Precautions:</strong></p>
+            <ul id="precautions"></ul>
+            <p><strong>Medications:</strong></p>
+            <ul id="medications"></ul>
+            <p><strong>Workouts:</strong></p>
+            <ul id="workouts"></ul>
+            <p><strong>Diets:</strong></p>
+            <ul id="diets"></ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Health Care Center. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function predictSymptoms() {
+            const symptomInput = document.getElementById('symptom-input').value.trim();
+            const resultsDiv = document.getElementById('results');
+
+            // Simple prediction logic (you can replace this with actual AI logic)
+            let predictedDisease = '';
+            let description = '';
+            let precautions = [];
+            let medications = [];
+            let workouts = [];
+            let diets = [];
+
+            if (symptomInput.toLowerCase().includes('fever')) {
+                predictedDisease = "Flu";
+                description = "A viral infection that attacks the respiratory system.";
+                precautions = ["Stay hydrated", "Rest", "Avoid close contact with others"];
+                medications = ["Paracetamol", "Cough syrup"];
+                workouts = ["Gentle stretching", "Walking"];
+                diets = ["Chicken soup", "Herbal tea"];
+            } else if (symptomInput.toLowerCase().includes('cough')) {
+                predictedDisease = "Common Cold";
+                description = "A viral infection causing cough and nasal congestion.";
+                precautions = ["Stay warm", "Drink warm fluids", "Avoid cold environments"];
+                medications = ["Cough syrup", "Throat lozenges"];
+                workouts = ["Light yoga", "Walking"];
+                diets = ["Hot tea with honey", "Broth"];
+            } else {
+                predictedDisease = "Unknown";
+                description = "Please consult a healthcare provider for accurate diagnosis.";
+                precautions = ["Consult a doctor"];
+                medications = ["N/A"];
+                workouts = ["N/A"];
+                diets = ["N/A"];
+            }
+
+            // Update the results section
+            document.getElementById('predicted_disease').innerText = predictedDisease;
+            document.getElementById('dis_des').innerText = description;
+            document.getElementById('precautions').innerHTML = precautions.map(i => `<li>${i}</li>`).join('');
+            document.getElementById('medications').innerHTML = medications.map(i => `<li>${i}</li>`).join('');
+            document.getElementById('workouts').innerHTML = workouts.map(i => `<li>${i}</li>`).join('');
+            document.getElementById('diets').innerHTML = diets.map(i => `<li>${i}</li>`).join('');
+
+            resultsDiv.classList.add('show'); // Show results section
+        }
+    </script>
+</body>
+
+</html>
