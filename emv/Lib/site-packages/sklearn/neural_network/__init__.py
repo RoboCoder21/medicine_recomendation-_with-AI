@@ -1,7 +1,9 @@
-"""Models based on neural networks."""
+"""
+The :mod:`sklearn.neural_network` module includes models based on neural
+networks.
+"""
 
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# License: BSD 3 clause
 
 from ._multilayer_perceptron import MLPClassifier, MLPRegressor
 from ._rbm import BernoulliRBM

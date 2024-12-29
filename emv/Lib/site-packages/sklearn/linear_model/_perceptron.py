@@ -1,6 +1,5 @@
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
-
+# Author: Mathieu Blondel
+# License: BSD 3 clause
 from numbers import Real
 
 from ..utils._param_validation import Interval, StrOptions
@@ -123,6 +122,10 @@ class Perceptron(BaseSGDClassifier):
 
     intercept_ : ndarray of shape (1,) if n_classes == 2 else (n_classes,)
         Constants in decision function.
+
+    loss_function_ : concrete LossFunction
+        The function that determines the loss, or difference between the
+        output of the algorithm and the target values.
 
     n_features_in_ : int
         Number of features seen during :term:`fit`.

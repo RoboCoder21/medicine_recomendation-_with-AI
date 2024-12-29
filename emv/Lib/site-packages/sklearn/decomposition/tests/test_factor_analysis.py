@@ -1,5 +1,6 @@
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# Author: Christian Osendorfer <osendorf@gmail.com>
+#         Alexandre Gramfort <alexandre.gramfort@inria.fr>
+# License: BSD3
 
 from itertools import combinations
 
@@ -9,12 +10,18 @@ import pytest
 from sklearn.decomposition import FactorAnalysis
 from sklearn.decomposition._factor_analysis import _ortho_rotation
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.utils._testing import assert_almost_equal, assert_array_almost_equal
+from sklearn.utils._testing import (
+    assert_almost_equal,
+    assert_array_almost_equal,
+    ignore_warnings,
+)
 
 
-def test_factor_analysis(global_random_seed):
+# Ignore warnings from switching to more power iterations in randomized_svd
+@ignore_warnings
+def test_factor_analysis():
     # Test FactorAnalysis ability to recover the data covariance structure
-    rng = np.random.RandomState(global_random_seed)
+    rng = np.random.RandomState(0)
     n_samples, n_features, n_components = 20, 5, 3
 
     # Some random settings for the generative model
@@ -50,7 +57,7 @@ def test_factor_analysis(global_random_seed):
         # Model Covariance
         mcov = fa.get_covariance()
         diff = np.sum(np.abs(scov - mcov)) / W.size
-        assert diff < 0.2, "Mean absolute difference is %f" % diff
+        assert diff < 0.1, "Mean absolute difference is %f" % diff
         fa = FactorAnalysis(
             n_components=n_components, noise_variance_init=np.ones(n_features)
         )

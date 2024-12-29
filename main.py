@@ -1,86 +1,45 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify  # Import jsonify
 import numpy as np
 import pandas as pd
 import pickle
-import logging
+from joblib import dump, load  
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+svc_en =load(open('models/svc.joblib','rb'))
+svc_am = load(open('models/svc_amharic.joblib','rb'))
+#svc = pickle.load(open('models/svc.pkl','rb'))
+#svc_am = pickle.load(open('models/svc_am.pkl','rb'))
 
-# Flask app
+# flask app
 app = Flask(__name__)
 
-# Function to load CSV files with error handling
-def load_csv(file_path):
+from io import StringIO
+def read_csv_safe(file_path):
+    with open(file_path, 'rb') as f:
+        content = f.read()
+    decoded_content = content.decode('utf-8-sig', errors='replace')
+    return pd.read_csv(StringIO(decoded_content), on_bad_lines='skip')  # Adjust the delimiter if needed
 
-    try:
-        logging.debug(f"Loading CSV file: {file_path}")
-        return pd.read_csv(file_path, encoding='ISO-8859-1')  # Change encoding as needed
-    except UnicodeDecodeError:
-        logging.error(f"UnicodeDecodeError for file: {file_path}, trying different encoding")
-        return pd.read_csv(file_path, encoding='utf-16')  # Try another encoding if needed
-    except FileNotFoundError:
-        logging.error(f"File not found: {file_path}")
-        return pd.DataFrame()  # Return an empty DataFrame if file not found
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame for any other exception
+def load_datasets(lang):
+    global sym_des, precautions, workout, description, medications, diets, symptoms_dict, diseases_list
+    if lang == "en":
+        # Read all CSV files
+        sym_des = read_csv_safe(r"en_dataseets/symtoms_df.csv")
+        precautions = read_csv_safe(r"en_dataseets/precautions_df.csv")
+        workout = read_csv_safe(r"en_dataseets/workout_df.csv")
+        description = read_csv_safe(r"en_dataseets/description.csv")
+        medications = read_csv_safe(r'en_dataseets/medications.csv')
+        diets = read_csv_safe(r"en_dataseets/diets.csv")
+        symptoms_dict = {'itching': 0, 'skin_rash': 1, 'nodal_skin_eruptions': 2, 'continuous_sneezing': 3, 'shivering': 4, 'chills': 5, 'joint_pain': 6, 'stomach_pain': 7, 'acidity': 8, 'ulcers_on_tongue': 9, 'muscle_wasting': 10, 'vomiting': 11, 'burning_micturition': 12, 'spotting_ urination': 13, 'fatigue': 14, 'weight_gain': 15, 'anxiety': 16, 'cold_hands_and_feets': 17, 'mood_swings': 18, 'weight_loss': 19, 'restlessness': 20, 'lethargy': 21, 'patches_in_throat': 22, 'irregular_sugar_level': 23, 'cough': 24, 'high_fever': 25, 'sunken_eyes': 26, 'breathlessness': 27, 'sweating': 28, 'dehydration': 29, 'indigestion': 30, 'headache': 31, 'yellowish_skin': 32, 'dark_urine': 33, 'nausea': 34, 'loss_of_appetite': 35, 'pain_behind_the_eyes': 36, 'back_pain': 37, 'constipation': 38, 'abdominal_pain': 39, 'diarrhoea': 40, 'mild_fever': 41, 'yellow_urine': 42, 'yellowing_of_eyes': 43, 'acute_liver_failure': 44, 'fluid_overload': 45, 'swelling_of_stomach': 46, 'swelled_lymph_nodes': 47, 'malaise': 48, 'blurred_and_distorted_vision': 49, 'phlegm': 50, 'throat_irritation': 51, 'redness_of_eyes': 52, 'sinus_pressure': 53, 'runny_nose': 54, 'congestion': 55, 'chest_pain': 56, 'weakness_in_limbs': 57, 'fast_heart_rate': 58, 'pain_during_bowel_movements': 59, 'pain_in_anal_region': 60, 'bloody_stool': 61, 'irritation_in_anus': 62, 'neck_pain': 63, 'dizziness': 64, 'cramps': 65, 'bruising': 66, 'obesity': 67, 'swollen_legs': 68, 'swollen_blood_vessels': 69, 'puffy_face_and_eyes': 70, 'enlarged_thyroid': 71, 'brittle_nails': 72, 'swollen_extremeties': 73, 'excessive_hunger': 74, 'extra_marital_contacts': 75, 'drying_and_tingling_lips': 76, 'slurred_speech': 77, 'knee_pain': 78, 'hip_joint_pain': 79, 'muscle_weakness': 80, 'stiff_neck': 81, 'swelling_joints': 82, 'movement_stiffness': 83, 'spinning_movements': 84, 'loss_of_balance': 85, 'unsteadiness': 86, 'weakness_of_one_body_side': 87, 'loss_of_smell': 88, 'bladder_discomfort': 89, 'foul_smell_of urine': 90, 'continuous_feel_of_urine': 91, 'passage_of_gases': 92, 'internal_itching': 93, 'toxic_look_(typhos)': 94, 'depression': 95, 'irritability': 96, 'muscle_pain': 97, 'altered_sensorium': 98, 'red_spots_over_body': 99, 'belly_pain': 100, 'abnormal_menstruation': 101, 'dischromic _patches': 102, 'watering_from_eyes': 103, 'increased_appetite': 104, 'polyuria': 105, 'family_history': 106, 'mucoid_sputum': 107, 'rusty_sputum': 108, 'lack_of_concentration': 109, 'visual_disturbances': 110, 'receiving_blood_transfusion': 111, 'receiving_unsterile_injections': 112, 'coma': 113, 'stomach_bleeding': 114, 'distention_of_abdomen': 115, 'history_of_alcohol_consumption': 116, 'fluid_overload.1': 117, 'blood_in_sputum': 118, 'prominent_veins_on_calf': 119, 'palpitations': 120, 'painful_walking': 121, 'pus_filled_pimples': 122, 'blackheads': 123, 'scurring': 124, 'skin_peeling': 125, 'silver_like_dusting': 126, 'small_dents_in_nails': 127, 'inflammatory_nails': 128, 'blister': 129, 'red_sore_around_nose': 130, 'yellow_crust_ooze': 131}
+        diseases_list = {15: 'Fungal infection', 4: 'Allergy', 16: 'GERD', 9: 'Chronic cholestasis', 14: 'Drug Reaction', 33: 'Peptic ulcer diseae', 1: 'AIDS', 12: 'Diabetes ', 17: 'Gastroenteritis', 6: 'Bronchial Asthma', 23: 'Hypertension ', 30: 'Migraine', 7: 'Cervical spondylosis', 32: 'Paralysis (brain hemorrhage)', 28: 'Jaundice', 29: 'Malaria', 8: 'Chicken pox', 11: 'Dengue', 37: 'Typhoid', 40: 'hepatitis A', 19: 'Hepatitis B', 20: 'Hepatitis C', 21: 'Hepatitis D', 22: 'Hepatitis E', 3: 'Alcoholic hepatitis', 36: 'Tuberculosis', 10: 'Common Cold', 34: 'Pneumonia', 13: 'Dimorphic hemmorhoids(piles)', 18: 'Heart attack', 39: 'Varicose veins', 26: 'Hypothyroidism', 24: 'Hyperthyroidism', 25: 'Hypoglycemia', 31: 'Osteoarthristis', 5: 'Arthritis', 0: '(vertigo) Paroymsal  Positional Vertigo', 2: 'Acne', 38: 'Urinary tract infection', 35: 'Psoriasis', 27: 'Impetigo'}
 
-
-
-# Load datasets
-sym_des_en = load_csv("dataset/symptoms_en.csv")
-precautions_en = load_csv("dataset/precautions_en.csv")
-workout_en = load_csv("dataset/workout_en.csv")
-description_en = load_csv("dataset/description_en.csv")
-medications_en = load_csv("dataset/medications_en.csv")
-diets_en = load_csv("dataset/diets_en.csv")
-
-sym_des_am = load_csv("am dataset/symtoms_am - symtoms_df (1).csv")
-precautions_am = load_csv("am dataset/symtoms_am - precautions_df.csv")
-workout_am = load_csv("am dataset/symtoms_am - workout_df.csv")
-description_am = load_csv("am dataset/symtoms_am - description (1).csv")
-medications_am = load_csv("am dataset/symtoms_am - medications.csv")
-diets_am = load_csv("am dataset/symtoms_am - diets.csv")
-
-# Load models
-try:
-    svc_en = pickle.load(open('models/svc_en.pkl', 'rb'))
-    svc_am = pickle.load(open('models/svc_am.pkl', 'rb'))
-    logging.debug("Models loaded successfully")
-except FileNotFoundError as e:
-    logging.error(f"Model file not found: {e}")
-    svc_en = svc_am = None  # Handle the absence of the models
-
-# Custom and helper functions
-def helper(dis, lang):
-    if lang == 'en':
-        if 'Disease' not in description_en.columns:
-            logging.error("'Disease' column not found in description_en DataFrame")
-            return None, None, None, None, None
-        
-        desc = description_en[description_en['Disease'] == dis]['Description']
-        pre = precautions_en[precautions_en['Disease'] == dis][['Precaution_1', 'Precaution_2', 'Precaution_3', 'Precaution_4']]
-        med = medications_en[medications_en['Disease'] == dis]['Medication']
-        die = diets_en[diets_en['Disease'] == dis]['Diet']
-        wrkout = workout_en[workout_en['disease'] == dis]['workout']
-    else:
-        if 'Disease' not in description_am.columns:
-            logging.error("'Disease' column not found in description_am DataFrame")
-            return None, None, None, None, None
-        
-        desc = description_am[description_am['Disease'] == dis]['Description']
-        pre = precautions_am[precautions_am['Disease'] == dis][['Precaution_1', 'Precaution_2', 'Precaution_3', 'Precaution_4']]
-        med = medications_am[medications_am['Disease'] == dis]['Medication']
-        die = diets_am[diets_am['Disease'] == dis]['Diet']
-        wrkout = workout_am[workout_am['disease'] == dis]['workout']
-
-    return desc, pre, med, die, wrkout
-
-# Symptoms and diseases dictionaries
-symptoms_dict_en = {'itching': 0, 'skin_rash': 1, 'nodal_skin_eruptions': 2, 'continuous_sneezing': 3, 'shivering': 4, 'chills': 5, 'joint_pain': 6, 'stomach_pain': 7, 'acidity': 8, 'ulcers_on_tongue': 9, 'muscle_wasting': 10, 'vomiting': 11, 'burning_micturition': 12, 'spotting_ urination': 13, 'fatigue': 14, 'weight_gain': 15, 'anxiety': 16, 'cold_hands_and_feets': 17, 'mood_swings': 18, 'weight_loss': 19, 'restlessness': 20, 'lethargy': 21, 'patches_in_throat': 22, 'irregular_sugar_level': 23, 'cough': 24, 'high_fever': 25, 'sunken_eyes': 26, 'breathlessness': 27, 'sweating': 28, 'dehydration': 29, 'indigestion': 30, 'headache': 31, 'yellowish_skin': 32, 'dark_urine': 33, 'nausea': 34, 'loss_of_appetite': 35, 'pain_behind_the_eyes': 36, 'back_pain': 37, 'constipation': 38, 'abdominal_pain': 39, 'diarrhoea': 40, 'mild_fever': 41, 'yellow_urine': 42, 'yellowing_of_eyes': 43, 'acute_liver_failure': 44, 'fluid_overload': 45, 'swelling_of_stomach': 46, 'swelled_lymph_nodes': 47, 'malaise': 48, 'blurred_and_distorted_vision': 49, 'phlegm': 50, 'throat_irritation': 51, 'redness_of_eyes': 52, 'sinus_pressure': 53, 'runny_nose': 54, 'congestion': 55, 'chest_pain': 56, 'weakness_in_limbs': 57, 'fast_heart_rate': 58, 'pain_during_bowel_movements': 59, 'pain_in_anal_region': 60, 'bloody_stool': 61, 'irritation_in_anus': 62, 'neck_pain': 63, 'dizziness': 64, 'cramps': 65, 'bruising': 66, 'obesity': 67, 'swollen_legs': 68, 'swollen_blood_vessels': 69, 'puffy_face_and_eyes': 70, 'enlarged_thyroid': 71, 'brittle_nails': 72, 'swollen_extremeties': 73, 'excessive_hunger': 74, 'extra_marital_contacts': 75, 'drying_and_tingling_lips': 76, 'slurred_speech': 77, 'knee_pain': 78, 'hip_joint_pain': 79, 'muscle_weakness': 80, 'stiff_neck': 81, 'swelling_joints': 82, 'movement_stiffness': 83, 'spinning_movements': 84, 'loss_of_balance': 85, 'unsteadiness': 86, 'weakness_of_one_body_side': 87, 'loss_of_smell': 88, 'bladder_discomfort': 89, 'foul_smell_of urine': 90, 'continuous_feel_of_urine': 91, 'passage_of_gases': 92, 'internal_itching': 93, 'toxic_look_(typhos)': 94, 'depression': 95, 'irritability': 96, 'muscle_pain': 97, 'altered_sensorium': 98, 'red_spots_over_body': 99, 'belly_pain': 100, 'abnormal_menstruation': 101, 'dischromic _patches': 102, 'watering_from_eyes': 103, 'increased_appetite': 104, 'polyuria': 105, 'family_history': 106, 'mucoid_sputum': 107, 'rusty_sputum': 108, 'lack_of_concentration': 109, 'visual_disturbances': 110, 'receiving_blood_transfusion': 111, 'receiving_unsterile_injections': 112, 'coma': 113, 'stomach_bleeding': 114, 'distention_of_abdomen': 115, 'history_of_alcohol_consumption': 116, 'fluid_overload.1': 117, 'blood_in_sputum': 118, 'prominent_veins_on_calf': 119, 'palpitations': 120, 'painful_walking': 121, 'pus_filled_pimples': 122, 'blackheads': 123, 'scurring': 124, 'skin_peeling': 125, 'silver_like_dusting': 126, 'small_dents_in_nails': 127, 'inflammatory_nails': 128, 'blister': 129, 'red_sore_around_nose': 130, 'yellow_crust_ooze': 131
-}
-symptoms_dict_am = {
+    elif lang == "am":
+        sym_des = pd.read_csv(r"am_dataset\symtoms_am - symtoms_df (1).csv")
+        precautions = pd.read_csv(r"am_dataset\symtoms_am - precautions_df.csv")
+        workout = pd.read_csv(r"am_dataset\symtoms_am - workout_df.csv")
+        description = pd.read_csv(r"am_dataset\symtoms_am - description (1).csv")
+        medications = pd.read_csv(r'am_dataset\symtoms_am - medications.csv')
+        diets = pd.read_csv(r"am_dataset\symtoms_am - diets.csv")
+        symptoms_dict = {
     "እከክ": 0,
     "የቆዳ_ሽፍታ": 1,
     "ኖዳል_ቆዳ_ፍንዳታዎች": 2,
@@ -214,89 +173,128 @@ symptoms_dict_am = {
     "በአፍንጫ_ዙሪያ_ቀይ_ቁስል": 130,
     "ቢጫ_ቅርፊት_አዝ": 131
 }
-diseases_list_en = {15: 'Fungal infection', 4: 'Allergy', 16: 'GERD', 9: 'Chronic cholestasis', 14: 'Drug Reaction', 33: 'Peptic ulcer diseae', 1: 'AIDS', 12: 'Diabetes ', 17: 'Gastroenteritis', 6: 'Bronchial Asthma', 23: 'Hypertension ', 30: 'Migraine', 7: 'Cervical spondylosis', 32: 'Paralysis (brain hemorrhage)', 28: 'Jaundice', 29: 'Malaria', 8: 'Chicken pox', 11: 'Dengue', 37: 'Typhoid', 40: 'hepatitis A', 19: 'Hepatitis B', 20: 'Hepatitis C', 21: 'Hepatitis D', 22: 'Hepatitis E', 3: 'Alcoholic hepatitis', 36: 'Tuberculosis', 10: 'Common Cold', 34: 'Pneumonia', 13: 'Dimorphic hemmorhoids(piles)', 18: 'Heart attack', 39: 'Varicose veins', 26: 'Hypothyroidism', 24: 'Hyperthyroidism', 25: 'Hypoglycemia', 31: 'Osteoarthristis', 5: 'Arthritis', 0: '(vertigo) Paroymsal  Positional Vertigo', 2: 'Acne', 38: 'Urinary tract infection', 35: 'Psoriasis', 27: 'Impetigo'}
+        diseases_list = {15: 'የፈንገስ ኢንፌክሽን', 4: 'አለርጂ', 16: 'GERD', 9: 'ሥር የሰደደ ኮሌስትሮል', 14: 'የመድሃኒት ምላሽ', 33: 'የፔፕቲክ ቁስለት በሽታ', 1: 'AIDS', 12: 'የስኳር በሽታ ', 17: 'የጨጓራ እጢ (gastroenteritis).', 6: 'ብሮንካይያል አስም', 23: 'የደም ግፊት ', 30: 'ማይግሬን', 7: 'የማኅጸን ጫፍ ስፖንዶሎሲስ', 32: 'ሽባ (የአንጎል ደም መፍሰስ)', 28: 'አገርጥቶትና', 29: 'ወባ', 8: 'የዶሮ ፐክስ', 11: 'ዴንጊ', 37: 'ታይፎይድ', 40: 'ሄፓታይተስ ኤ', 19: 'ሄፓታይተስ ቢ', 20: 'ሄፓታይተስ ሲ', 21: 'ሄፓታይተስ ዲ', 22: 'ሄፓታይተስ ኢ', 3: 'የአልኮል ሄፓታይተስ', 36: 'የሳንባ ነቀርሳ በሽታ', 10: 'የጋራ ቅዝቃዜ', 34: 'የሳንባ ምች', 13: 'ዲሞርፊክ ሄሞሮይድስ (ክምር)', 18: 'የልብ ድካም', 39: 'የ varicose ደም መላሽ ቧንቧዎች', 26: 'Hypothyroidism', 24: 'ሃይፖታይሮዲዝም', 25: 'ሃይፖግላይሴሚያ', 31: 'የአርትሮሲስ በሽታ', 5: 'አርትራይተስ', 0: '(vertigo) Paroymsal  Positional Vertigo', 2: 'ብጉር', 38: 'የሽንት ቧንቧ ኢንፌክሽን', 35: 'Psoriasis', 27: 'ኢምፔቲጎ'}
 
 
-diseases_list_am = {15: 'የፈንገስ ኢንፌክሽን', 4: 'አለርጂ', 16: 'GERD', 9: 'ሥር የሰደደ ኮሌስትሮል', 14: 'የመድሃኒት ምላሽ', 33: 'የፔፕቲክ ቁስለት በሽታ', 1: 'AIDS', 12: 'የስኳር በሽታ ', 17: 'የጨጓራ እጢ (gastroenteritis).', 6: 'ብሮንካይያል አስም', 23: 'የደም ግፊት ', 30: 'ማይግሬን', 7: 'የማኅጸን ጫፍ ስፖንዶሎሲስ', 32: 'ሽባ (የአንጎል ደም መፍሰስ)', 28: 'አገርጥቶትና', 29: 'ወባ', 8: 'የዶሮ ፐክስ', 11: 'ዴንጊ', 37: 'ታይፎይድ', 40: 'ሄፓታይተስ ኤ', 19: 'ሄፓታይተስ ቢ', 20: 'ሄፓታይተስ ሲ', 21: 'ሄፓታይተስ ዲ', 22: 'ሄፓታይተስ ኢ', 3: 'የአልኮል ሄፓታይተስ', 36: 'የሳንባ ነቀርሳ በሽታ', 10: 'የጋራ ቅዝቃዜ', 34: 'የሳንባ ምች', 13: 'ዲሞርፊክ ሄሞሮይድስ (ክምር)', 18: 'የልብ ድካም', 39: 'የ varicose ደም መላሽ ቧንቧዎች', 26: 'Hypothyroidism', 24: 'ሃይፖታይሮዲዝም', 25: 'ሃይፖግላይሴሚያ', 31: 'የአርትሮሲስ በሽታ', 5: 'አርትራይተስ', 0: '(vertigo) Paroymsal  Positional Vertigo', 2: 'ብጉር', 38: 'የሽንት ቧንቧ ኢንፌክሽን', 35: 'Psoriasis', 27: 'ኢምፔቲጎ'}
 
+#============================================================
+# Custom and Helping Functions
+#========================== Helper Functions ==================
+def helper(dis):
+    # Strip spaces from column names for safety
+    description.columns = description.columns.str.strip()
+    precautions.columns = precautions.columns.str.strip()
+    medications.columns = medications.columns.str.strip()
+    diets.columns = diets.columns.str.strip()
+    workout.columns = workout.columns.str.strip()
 
-def get_predicted_value(patient_symptoms, lang):
-    if lang == 'en':
-        input_vector = np.zeros(len(symptoms_dict_en))
-        symptoms_dict = symptoms_dict_en
+    # Description
+    if 'Disease' in description.columns:
+        desc = description[description['Disease'] == dis]['Description']
+        desc = " ".join([w for w in desc])
     else:
-        input_vector = np.zeros(len(symptoms_dict_am))
-        symptoms_dict = symptoms_dict_am
+        desc = "Description not available."
 
+    # Precautions
+    if 'Disease' in precautions.columns:
+        pre = precautions[precautions['Disease'] == dis][['Precaution_1', 'Precaution_2', 'Precaution_3', 'Precaution_4']]
+        pre = [col for col in pre.values]
+    else:
+        pre = []
+
+    # Medications
+    if 'Disease' in medications.columns:
+        med = medications[medications['Disease'] == dis]['Medication']
+        med = [med for med in med.values]
+    else:
+        med = []
+
+    # Diet
+    if 'Disease' in diets.columns:
+        die = diets[diets['Disease'] == dis]['Diet']
+        die = [die for die in die.values]
+    else:
+        die = []
+
+    # Workout
+    if 'disease' in workout.columns:
+        wrkout = workout[workout['disease'] == dis]['workout']
+    else:
+        wrkout = []
+
+    return desc, pre, med, die, wrkout
+
+# Model Prediction function
+def get_predicted_value(patient_symptoms, lang):
+    input_vector = np.zeros(132)
     for item in patient_symptoms:
-        if item in symptoms_dict:
-            index = symptoms_dict[item]
-            logging.debug(f"Setting input_vector[{index}] to 1 for symptom: {item}")
-            input_vector[index] = 1  # Set the appropriate index
-        else:
-            logging.warning(f"Symptom '{item}' not found in symptoms_dict")
+        input_vector[symptoms_dict[item]] = 1
+    if lang == 'en':
+        dis = diseases_list[svc_en.predict([input_vector])[0]]
+    elif lang == 'am':
+        dis = diseases_list[svc_am.predict([input_vector])[0]]
+    return dis
 
-    model = svc_en if lang == 'en' else svc_am
+# creating routes========================================
 
-    # Check if the model was loaded successfully
-    if model is None:
-        logging.error("Model is not loaded. Please check the model file paths.")
-        return "Model not loaded"  # Handle appropriately
-    
-    try:
-        disease_index = model.predict([input_vector])[0]
-        return diseases_list_en[disease_index] if lang == 'en' else diseases_list_am[disease_index]
-    except Exception as e:
-        logging.error(f"Prediction failed: {e}")
-        return "Prediction error"
 
-# Creating routes
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# Define a route for the home page
 @app.route('/predict', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        symptoms = request.form.get('symptoms', '').strip()
-        lang = request.form.get('lang', 'en')
+        symptoms = request.form.get('symptoms')
+        lang = request.form.get('language', 'en').strip()
+        print(f"Language selected: {lang}")
+        load_datasets(lang)
         
-        if symptoms == "Symptoms" or not symptoms:
-            message = "Please write symptoms or check for misspellings."
+        
+        if not symptoms or symptoms == "Symptoms":
+            message = "Please enter symptoms" if lang == "en" else "እባክዎ ምልክቶችን ያስገቡ"
             return render_template('index.html', message=message)
         
+        # Split the user's input into a list of symptoms
         user_symptoms = [s.strip() for s in symptoms.split(',') if s.strip()]
-        predicted_disease = get_predicted_value(user_symptoms, lang)
+        # Remove any extra characters
+        user_symptoms = [symptom.strip("[]' ") for symptom in user_symptoms]
         
-        if predicted_disease in ["Model not loaded", "Prediction error"]:
-            return render_template('index.html', message=predicted_disease)
-        
-        # Call the helper function and unpack values
-        dis_des, precautions, medications, rec_diet, workout = helper(predicted_disease, lang)
+        try:
+            # Get prediction using the appropriate language
+            predicted_disease = get_predicted_value(user_symptoms, lang)
+            dis_des, precautions, medications, rec_diet, workout = helper(predicted_disease)
 
-        # Check for None return values
-        if precautions is None:
-            return render_template('index.html', message="Error retrieving precautions for the disease.")
+            my_precautions = []
+            for i in precautions[0]:
+                my_precautions.append(i)
 
-        # Check for empty precautions DataFrame
-        if precautions.empty:
-            my_precautions = ["No precautions available for this disease."]
-        else:
-            my_precautions = [precautions[col].values[0] for col in precautions.columns if col in precautions]
-
-        return render_template('index.html', predicted_disease=predicted_disease, dis_des=dis_des,
-                               my_precautions=my_precautions, medications=medications, my_diet=rec_diet,
-                               workout=workout)
+            return render_template('index.html', 
+                                predicted_disease=predicted_disease, 
+                                dis_des=dis_des,
+                                my_precautions=my_precautions, 
+                                medications=medications, 
+                                my_diet=rec_diet,
+                                workout=workout,
+                                selected_lang=lang)
+        except Exception as e:
+            message = f"Error in prediction: {str(e)}" if lang == "en" else f"በትንበያው ላይ ስህተት: {str(e)}"
+            return render_template('index.html', message=message)
 
     return render_template('index.html')
 
+
+
+# about view funtion and path
 @app.route('/about')
 def about():
     return render_template("about.html")
-
+# contact view funtion and path
 @app.route('/contact')
 def contact():
     return render_template("contact.html")
 
 if __name__ == '__main__':
+
     app.run(debug=True)

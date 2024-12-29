@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: BSD-3-Clause
+# License: BSD 3 clause
 
 import itertools
 import pickle

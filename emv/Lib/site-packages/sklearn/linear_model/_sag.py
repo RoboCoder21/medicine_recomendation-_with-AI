@@ -1,7 +1,8 @@
 """Solvers for Ridge and LogisticRegression using SAG algorithm"""
 
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# Authors: Tom Dupre la Tour <tom.dupre-la-tour@m4x.org>
+#
+# License: BSD 3 clause
 
 import warnings
 
@@ -127,7 +128,7 @@ def sag_solver(
 
     y : ndarray of shape (n_samples,)
         Target values. With loss='multinomial', y must be label encoded
-        (see preprocessing.LabelEncoder). For loss='log' it must be in [0, 1].
+        (see preprocessing.LabelEncoder).
 
     sample_weight : array-like of shape (n_samples,), default=None
         Weights applied to individual samples (1. for unweighted).
@@ -219,9 +220,10 @@ def sag_solver(
 
     >>> X = np.array([[-1, -1], [-2, -1], [1, 1], [2, 1]])
     >>> y = np.array([1, 1, 2, 2])
-    >>> clf = linear_model.LogisticRegression(solver='sag')
+    >>> clf = linear_model.LogisticRegression(
+    ...     solver='sag', multi_class='multinomial')
     >>> clf.fit(X, y)
-    LogisticRegression(solver='sag')
+    LogisticRegression(multi_class='multinomial', solver='sag')
 
     References
     ----------

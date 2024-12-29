@@ -1,5 +1,6 @@
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# Authors: Lars Buitinck
+#          Dan Blanchard <dblanchard@ets.org>
+# License: BSD 3 clause
 
 from random import Random
 

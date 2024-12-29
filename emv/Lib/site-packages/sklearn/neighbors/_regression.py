@@ -1,7 +1,14 @@
 """Nearest Neighbor Regression."""
 
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# Authors: Jake Vanderplas <vanderplas@astro.washington.edu>
+#          Fabian Pedregosa <fabian.pedregosa@inria.fr>
+#          Alexandre Gramfort <alexandre.gramfort@inria.fr>
+#          Sparseness support by Lars Buitinck
+#          Multi-output support by Arnaud Joly <a.joly@ulg.ac.be>
+#          Empty radius support by Andreas Bjerre-Nielsen
+#
+# License: BSD 3 clause (C) INRIA, University of Amsterdam,
+#                           University of Copenhagen
 
 import warnings
 
@@ -41,10 +48,6 @@ class KNeighborsRegressor(KNeighborsMixin, RegressorMixin, NeighborsBase):
           containing the weights.
 
         Uniform weights are used by default.
-
-        See the following example for a demonstration of the impact of
-        different weighting schemes on predictions:
-        :ref:`sphx_glr_auto_examples_neighbors_plot_regression.py`.
 
     algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, default='auto'
         Algorithm used to compute the nearest neighbors:
@@ -191,11 +194,9 @@ class KNeighborsRegressor(KNeighborsMixin, RegressorMixin, NeighborsBase):
         )
         self.weights = weights
 
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
+    def _more_tags(self):
         # For cross-validation routines to split data correctly
-        tags.input_tags.pairwise = self.metric == "precomputed"
-        return tags
+        return {"pairwise": self.metric == "precomputed"}
 
     @_fit_context(
         # KNeighborsRegressor.metric is not validated yet
@@ -227,10 +228,8 @@ class KNeighborsRegressor(KNeighborsMixin, RegressorMixin, NeighborsBase):
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_queries, n_features), \
-                or (n_queries, n_indexed) if metric == 'precomputed', or None
-            Test samples. If `None`, predictions for all indexed points are
-            returned; in this case, points are not considered their own
-            neighbors.
+                or (n_queries, n_indexed) if metric == 'precomputed'
+            Test samples.
 
         Returns
         -------
@@ -459,10 +458,8 @@ class RadiusNeighborsRegressor(RadiusNeighborsMixin, RegressorMixin, NeighborsBa
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_queries, n_features), \
-                or (n_queries, n_indexed) if metric == 'precomputed', or None
-            Test samples. If `None`, predictions for all indexed points are
-            returned; in this case, points are not considered their own
-            neighbors.
+                or (n_queries, n_indexed) if metric == 'precomputed'
+            Test samples.
 
         Returns
         -------

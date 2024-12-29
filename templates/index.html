@@ -55,9 +55,8 @@
                     </li>
                     
                 </ul>
-                <form class="d-flex" role="search">
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
+                <form class="d-flex" role="reset">
+                    <button class="btn btn-outline-success" type="submit">Reset</button>
                 </form>
             </div>
         </div>
@@ -76,8 +75,8 @@
         <div class="form-group mb-3">
             <label for="language">Select Language / ቋንቋ ይምረጡ:</label>
             <select class="form-control" id="language" name="language">
-                <option value="en">English</option>
-                <option value="am">አማርኛ</option>
+                <option value="en" {% if selected_lang == 'en' %}selected{% endif %}>English</option>
+                <option value="am" {% if selected_lang == 'am' %}selected{% endif %}>አማርኛ</option>
             </select>
         </div>
 
@@ -86,18 +85,7 @@
             <input type="text" class="form-control" id="symptoms" name="symptoms" placeholder="type symptoms such as itching, sleeping, aching etc">
         </div>
         <br>
-        <button type="button" id="startSpeechRecognition" class="btn btn-primary" style="margin-left:3px;border:1px solid white; border-radius:20px;">
-            <span id="speechButtonText">Start Speech Recognition</span>
-        </button>
-        <br>
-
-        <!-- Display the transcribed text here -->
-        <div name="mysysms" id="transcription"></div>
-
-        {% if message %}
-        <p>{{ message }}</p>
-        {% endif %}
-        <br>
+ 
 
         <button type="submit" class="btn btn-danger btn-lg" style="width: 100%; padding: 14px; margin-bottom: 5px;">Predict</button>
     </form>

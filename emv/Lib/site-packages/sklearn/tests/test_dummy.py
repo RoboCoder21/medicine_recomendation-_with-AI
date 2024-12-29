@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import pytest
 import scipy.sparse as sp
@@ -11,18 +9,17 @@ from sklearn.utils._testing import (
     assert_almost_equal,
     assert_array_almost_equal,
     assert_array_equal,
+    ignore_warnings,
 )
 from sklearn.utils.fixes import CSC_CONTAINERS
 from sklearn.utils.stats import _weighted_percentile
 
 
+@ignore_warnings
 def _check_predict_proba(clf, X, y):
     proba = clf.predict_proba(X)
-
     # We know that we can have division by zero
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", "divide by zero encountered in log")
-        log_proba = clf.predict_log_proba(X)
+    log_proba = clf.predict_log_proba(X)
 
     y = np.atleast_1d(y)
     if y.ndim == 1:
@@ -40,9 +37,7 @@ def _check_predict_proba(clf, X, y):
         assert proba[k].shape[1] == len(np.unique(y[:, k]))
         assert_array_almost_equal(proba[k].sum(axis=1), np.ones(len(X)))
         # We know that we can have division by zero
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", "divide by zero encountered in log")
-            assert_array_almost_equal(np.log(proba[k]), log_proba[k])
+        assert_array_almost_equal(np.log(proba[k]), log_proba[k])
 
 
 def _check_behavior_2d(clf):
@@ -75,23 +70,6 @@ def _check_behavior_2d_for_constant(clf):
 def _check_equality_regressor(statistic, y_learn, y_pred_learn, y_test, y_pred_test):
     assert_array_almost_equal(np.tile(statistic, (y_learn.shape[0], 1)), y_pred_learn)
     assert_array_almost_equal(np.tile(statistic, (y_test.shape[0], 1)), y_pred_test)
-
-
-def test_feature_names_in_and_n_features_in_(global_random_seed, n_samples=10):
-    pd = pytest.importorskip("pandas")
-
-    random_state = np.random.RandomState(seed=global_random_seed)
-
-    X = pd.DataFrame([[0]] * n_samples, columns=["feature_1"])
-    y = random_state.rand(n_samples)
-
-    est = DummyRegressor().fit(X, y)
-    assert hasattr(est, "feature_names_in_")
-    assert hasattr(est, "n_features_in_")
-
-    est = DummyClassifier().fit(X, y)
-    assert hasattr(est, "feature_names_in_")
-    assert hasattr(est, "n_features_in_")
 
 
 def test_most_frequent_and_prior_strategy():
@@ -398,7 +376,7 @@ def test_quantile_invalid():
 
 def test_quantile_strategy_empty_train():
     est = DummyRegressor(strategy="quantile", quantile=0.4)
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         est.fit([], [])
 
 

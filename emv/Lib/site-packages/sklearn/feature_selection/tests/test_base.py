@@ -5,7 +5,6 @@ from numpy.testing import assert_array_equal
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection._base import SelectorMixin
 from sklearn.utils.fixes import CSC_CONTAINERS
-from sklearn.utils.validation import validate_data
 
 
 class StepSelector(SelectorMixin, BaseEstimator):
@@ -18,7 +17,7 @@ class StepSelector(SelectorMixin, BaseEstimator):
         self.step = step
 
     def fit(self, X, y=None):
-        X = validate_data(self, X, accept_sparse="csc")
+        X = self._validate_data(X, accept_sparse="csc")
         return self
 
     def _get_support_mask(self):

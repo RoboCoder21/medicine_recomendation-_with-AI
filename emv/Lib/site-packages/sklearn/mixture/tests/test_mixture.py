@@ -1,5 +1,5 @@
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
+# Author: Guillaume Lemaitre <g.lemaitre58@gmail.com>
+# License: BSD 3 clause
 
 import numpy as np
 import pytest

@@ -2,9 +2,8 @@
 Testing for Theil-Sen module (sklearn.linear_model.theil_sen)
 """
 
-# Authors: The scikit-learn developers
-# SPDX-License-Identifier: BSD-3-Clause
-
+# Author: Florian Wilhelm <florian.wilhelm@gmail.com>
+# License: BSD 3 clause
 import os
 import re
 import sys
@@ -293,11 +292,3 @@ def test_less_samples_than_features():
     theil_sen = TheilSenRegressor(fit_intercept=True, random_state=0).fit(X, y)
     y_pred = theil_sen.predict(X)
     assert_array_almost_equal(y_pred, y, 12)
-
-
-# TODO(1.8): Remove
-def test_copy_X_deprecated():
-    X, y, _, _ = gen_toy_problem_1d()
-    theil_sen = TheilSenRegressor(copy_X=True, random_state=0)
-    with pytest.warns(FutureWarning, match="`copy_X` was deprecated"):
-        theil_sen.fit(X, y)
